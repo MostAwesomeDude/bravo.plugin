@@ -11,12 +11,65 @@ from exocet import ExclusiveMapper, getModule, load, pep302Mapper
 from twisted.internet import reactor
 from twisted.python import log
 
+from zope.interface import invariant, Attribute, Interface
 from zope.interface.exceptions import BrokenImplementation
 from zope.interface.exceptions import BrokenMethodImplementation
 from zope.interface.verify import verifyObject
 
-from bravo.errors import PluginException
-from bravo.ibravo import InvariantException, ISortedPlugin
+
+class InvariantException(Exception):
+    """
+    Exception raised by failed invariant conditions.
+    """
+
+class PluginException(Exception):
+    """
+    Signal an error encountered during plugin handling.
+    """
+
+
+class IBravoPlugin(Interface):
+    """
+    Interface for plugins.
+
+    This interface stores common metadata used during plugin discovery.
+    """
+
+    name = Attribute("""
+        The name of the plugin.
+
+        This name is used to reference the plugin in configurations, and also
+        to uniquely index the plugin.
+        """)
+
+def sorted_invariant(s):
+    intersection = set(s.before) & set(s.after)
+    if intersection:
+        raise InvariantException("Plugin wants to come before and after %r" %
+            intersection)
+
+class ISortedPlugin(IBravoPlugin):
+    """
+    Parent interface for sorted plugins.
+
+    Sorted plugins have an innate and automatic ordering inside lists thanks
+    to the ability to advertise their dependencies.
+    """
+
+    invariant(sorted_invariant)
+
+    before = Attribute("""
+        Plugins which must come before this plugin in the pipeline.
+
+        Should be a tuple, list, or some other iterable.
+        """)
+
+    after = Attribute("""
+        Plugins which must come after this plugin in the pipeline.
+
+        Should be a tuple, list, or some other iterable.
+        """)
+
 
 blacklisted = set([
     "asyncore",        # Use Twisted's event loop.

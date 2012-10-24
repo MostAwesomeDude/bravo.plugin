@@ -2,7 +2,7 @@ from twisted.trial import unittest
 
 import zope.interface
 
-import bravo.plugin
+import bravo_plugin
 
 class EdgeHolder(object):
 
@@ -19,7 +19,7 @@ class TestDependencyHelpers(unittest.TestCase):
             "second": EdgeHolder("second", tuple(), ("first",)),
         }
 
-        bravo.plugin.add_plugin_edges(d)
+        bravo_plugin.add_plugin_edges(d)
 
         self.assertEqual(d["first"].before, set(["second"]))
 
@@ -29,7 +29,7 @@ class TestDependencyHelpers(unittest.TestCase):
             "second": EdgeHolder("second", tuple(), tuple()),
         }
 
-        bravo.plugin.add_plugin_edges(d)
+        bravo_plugin.add_plugin_edges(d)
 
         self.assertEqual(d["second"].after, set(["first"]))
 
@@ -38,7 +38,7 @@ class TestDependencyHelpers(unittest.TestCase):
             "first": EdgeHolder("first", ("second",), tuple()),
         }
 
-        bravo.plugin.add_plugin_edges(d)
+        bravo_plugin.add_plugin_edges(d)
 
         self.assertEqual(d["first"].before, set())
 
@@ -48,7 +48,7 @@ class TestDependencyHelpers(unittest.TestCase):
             EdgeHolder("second", tuple(), ("first",)),
         ]
 
-        sorted = bravo.plugin.sort_plugins(l)
+        sorted = bravo_plugin.sort_plugins(l)
         l.reverse()
         self.assertEqual(l, sorted)
 
@@ -63,7 +63,7 @@ class TestDependencyHelpers(unittest.TestCase):
             EdgeHolder("third", tuple(), tuple()),
         ]
 
-        sorted = bravo.plugin.sort_plugins(l)
+        sorted = bravo_plugin.sort_plugins(l)
         self.assertEqual(set(l), set(sorted))
 
     def test_sort_plugins_missing_dependency(self):
@@ -78,7 +78,7 @@ class TestDependencyHelpers(unittest.TestCase):
             EdgeHolder("third", tuple(), ("missing",)),
         ]
 
-        sorted = bravo.plugin.sort_plugins(l)
+        sorted = bravo_plugin.sort_plugins(l)
         self.assertEqual(set(l), set(sorted))
 
 class TestOptions(unittest.TestCase):
@@ -87,29 +87,29 @@ class TestOptions(unittest.TestCase):
         names = ["first", "second"]
         d = {"first": None, "second": None}
         self.assertEqual(sorted(["first", "second"]),
-            sorted(bravo.plugin.expand_names(d, names)))
+            sorted(bravo_plugin.expand_names(d, names)))
 
     def test_doubled(self):
         names = ["first", "first", "second"]
         d = {"first": None, "second": None}
         self.assertEqual(sorted(["first", "second"]),
-            sorted(bravo.plugin.expand_names(d, names)))
+            sorted(bravo_plugin.expand_names(d, names)))
 
     def test_wildcard(self):
         names = ["*"]
         d = {"first": None, "second": None}
         self.assertEqual(set(["first", "second"]),
-            set(bravo.plugin.expand_names(d, names)))
+            set(bravo_plugin.expand_names(d, names)))
 
     def test_wildcard_removed(self):
         names = ["*", "-first"]
         d = {"first": None, "second": None}
-        self.assertEqual(["second"], bravo.plugin.expand_names(d, names))
+        self.assertEqual(["second"], bravo_plugin.expand_names(d, names))
 
     def test_wildcard_after_removed(self):
         names = ["-first", "*"]
         d = {"first": None, "second": None}
-        self.assertEqual(["second"], bravo.plugin.expand_names(d, names))
+        self.assertEqual(["second"], bravo_plugin.expand_names(d, names))
 
     def test_removed_conflict(self):
         """
@@ -119,12 +119,12 @@ class TestOptions(unittest.TestCase):
 
         names = ["first", "-first", "second"]
         d = {"first": None, "second": None}
-        self.assertEqual(["second"], bravo.plugin.expand_names(d, names))
+        self.assertEqual(["second"], bravo_plugin.expand_names(d, names))
 
     def test_removed_conflict_after(self):
         names = ["-first", "first", "second"]
         d = {"first": None, "second": None}
-        self.assertEqual(["second"], bravo.plugin.expand_names(d, names))
+        self.assertEqual(["second"], bravo_plugin.expand_names(d, names))
 
 class ITestInterface(zope.interface.Interface):
 
@@ -139,8 +139,8 @@ class TestVerifyPlugin(unittest.TestCase):
         class NoName(object):
             zope.interface.implements(ITestInterface)
 
-        self.assertRaises(bravo.plugin.PluginException,
-                          bravo.plugin.verify_plugin,
+        self.assertRaises(bravo_plugin.PluginException,
+                          bravo_plugin.verify_plugin,
                           ITestInterface,
                           NoName())
 
@@ -150,8 +150,8 @@ class TestVerifyPlugin(unittest.TestCase):
 
             name = "test"
 
-        self.assertRaises(bravo.plugin.PluginException,
-                          bravo.plugin.verify_plugin,
+        self.assertRaises(bravo_plugin.PluginException,
+                          bravo_plugin.verify_plugin,
                           ITestInterface,
                           NoAttr())
 
@@ -162,8 +162,8 @@ class TestVerifyPlugin(unittest.TestCase):
             name = "test"
             attr = "unit"
 
-        self.assertRaises(bravo.plugin.PluginException,
-                          bravo.plugin.verify_plugin,
+        self.assertRaises(bravo_plugin.PluginException,
+                          bravo_plugin.verify_plugin,
                           ITestInterface,
                           NoMeth())
 
@@ -177,8 +177,8 @@ class TestVerifyPlugin(unittest.TestCase):
             def meth(self, arg, extra):
                 pass
 
-        self.assertRaises(bravo.plugin.PluginException,
-                          bravo.plugin.verify_plugin,
+        self.assertRaises(bravo_plugin.PluginException,
+                          bravo_plugin.verify_plugin,
                           ITestInterface,
                           BrokenMeth())
 
@@ -197,5 +197,5 @@ class TestVerifyPlugin(unittest.TestCase):
                 pass
 
         valid = Valid()
-        self.assertEqual(bravo.plugin.verify_plugin(ITestInterface, valid),
+        self.assertEqual(bravo_plugin.verify_plugin(ITestInterface, valid),
                          valid)
