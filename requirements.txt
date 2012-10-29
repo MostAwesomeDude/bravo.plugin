@@ -1,3 +1,1 @@
-Exocet
-Twisted
 zope.interface
